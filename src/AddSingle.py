@@ -4,9 +4,13 @@ from typing import List
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtSvg import *
 
 from .Forvo import Pronunciation
-from anki_forvo_dl.src.util.Util import CustomScrollbar
+from .util.Util import CustomScrollbar
+from pprint import pprint
+import urllib.request
+
 
 
 class PronunciationWidget(QWidget):
@@ -39,8 +43,27 @@ class PronunciationWidget(QWidget):
 
         word_info_layout = QVBoxLayout()
 
+
+        word_flag_layout = QHBoxLayout()
+        word_flag_layout.setAlignment(Qt.AlignLeft)
+
+
         word = QLabel(pronunciation.word)
-        word_info_layout.addWidget(word)
+        word_flag_layout.addWidget(word)
+
+        if pronunciation.flag_url:
+            flag_data = urllib.request.urlopen(pronunciation.flag_url).read()
+
+            flag_image = QImage()
+            flag_image.loadFromData(flag_data)
+
+            flag = QLabel()
+            flag.setPixmap(QPixmap(flag_image).scaledToHeight(16))
+            word_flag_layout.addWidget(flag)
+
+
+        word_info_layout.addLayout(word_flag_layout)
+
         word.setStyleSheet("font-size: 24px; font-weight: bold; color: #000000;")
         more_info = QLabel("by " + pronunciation.user + " • " + str(pronunciation.votes) + " votes")
         more_info.setStyleSheet("color: #000000;")
@@ -76,6 +99,7 @@ class AddSingle(QDialog):
 
         if hidden_entries_amount > 0:
             self.description += f"<b><small>There are {hidden_entries_amount} more entries which you chose to hide by deactivating .ogg fallback.</small></b>"
+
         self.description_label = QLabel(text=self.description)
         self.description_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.description_label)
